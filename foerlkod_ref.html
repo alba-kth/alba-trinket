@@ -1,9 +1,11 @@
+<!-- SPDX-License-Identifier: MIT | Copyright (c) 2026 Alexander Baltatzis <alba@kth.se> -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Python Tutor</title>
+  <!-- BEGIN:base --><base href="../"><!-- END:base -->
 
   <!-- CodeMirror: the code editor with syntax highlighting -->
   <link rel="stylesheet" href="codemirror_files/codemirror.min.css">
@@ -35,7 +37,7 @@
     .muted { color: #6c757d; }
     .small { font-size: 0.875rem; }
 
-    /* File panes: two columns side by side, stacked on narrow screens */
+    /* File panes: columns side by side, stacked on narrow screens */
     .file-panes {
       display: flex;
       gap: 1rem;
@@ -115,78 +117,72 @@
     .btn-reset:hover { background-color: #dc3545; color: #fff; }
 
     /* Output pane */
-    #output {
+    #output-wrap {
       font-family: monospace;
       font-size: 0.9rem;
-      white-space: pre-wrap;
       background: #212529;
       color: #f8f9fa;
       min-height: 80px;
       padding: 0.75rem;
       border-radius: 0.375rem;
     }
+    #output { white-space: pre-wrap; }
     #output.error { color: #ff6b6b; }
+    #output input[type="text"] {
+      background: transparent;
+      border: none;
+      outline: none;
+      color: #f8f9fa;
+      font-family: inherit;
+      font-size: inherit;
+      caret-color: #f8f9fa;
+    }
+
+    /* Program-done flash and line */
+    @keyframes done-flash {
+      0%   { box-shadow: 0 0 0 3px #198754; }
+      70%  { box-shadow: 0 0 0 3px #198754; }
+      100% { box-shadow: none; }
+    }
+    #output-wrap.done-flash { animation: done-flash 0.7s ease-out forwards; }
+    .done-line { color: #495057; }
 
     /* Step debugger highlight */
     .debug-line { background: #ffe066 !important; }
     .debug-line .CodeMirror-line,
     .debug-line .CodeMirror-line span { color: #333 !important; }
+
   </style>
 </head>
 <body>
 <div id="page">
 
-  <!-- ============================================================
-       EXERCISE HEADER — edit this to describe the exercise
-       ============================================================ -->
-  <!-- BEGIN:title --><h2 id="exercise-title">Importing from Another File</h2><!-- END:title -->
+  <!-- BEGIN:title --><h2 id="exercise-title">Exercise Title</h2><!-- END:title -->
   <!-- BEGIN:description --><p class="muted" id="exercise-description">
-    This exercise shows how Python code can be split across multiple files.
-    The file <code>helpers.py</code> defines functions that <code>main.py</code> imports and uses.
+    Exercise description.
   </p><!-- END:description -->
   <hr>
 
-  <!-- ============================================================
-       FILE PANES
-       data-filename: what Python sees when importing or opening
-       id: same value — needed for open() via Skulpt
-       ============================================================ -->
-  <h5>Python Files</h5>
-  <p class="muted small">You can edit both files. The main code can import from helpers.py.</p>
+  <!-- BEGIN:file-rows -->
+  <h5>Files</h5>
+  <p class="muted small">You can edit these files. Your Python code can open() or import them by name.</p>
 
-  <!-- BEGIN:file-panes --><div class="file-panes">
+  <div class="file-panes">
 
     <div class="file-pane">
-      <label><code>helpers.py</code></label>
-      <textarea rows="12" id="helpers.py" data-filename="helpers.py">def greet(name):
-    return "Hello, " + name + "!"
-
-def double(n):
-    return n * 2
+      <label><code>example.txt</code></label>
+      <textarea rows="8" id="example.txt" data-filename="example.txt">example content
 </textarea>
     </div>
 
-    <div class="file-pane">
-      <label><code>names.txt</code></label>
-      <textarea rows="12" id="names.txt" data-filename="names.txt">Alice
-Bob
-Carol
-</textarea>
-    </div>
+  </div>
+  <!-- END:file-rows -->
 
-  </div><!-- END:file-panes -->
-
-  <!-- ============================================================
-       CODE PANE
-       ============================================================ -->
   <h5>Python Code</h5>
-  <p class="muted small">This is main.py. Edit and run it.</p>
+  <p class="muted small">Edit and run the code.</p>
 
   <div id="code-pane">
-    <!-- BEGIN:code --><textarea id="code">import helpers
-
-print(helpers.greet("world"))
-print(helpers.double(21))
+    <!-- BEGIN:code --><textarea id="code">print("hello")
 </textarea><!-- END:code -->
   </div>
 
@@ -195,11 +191,10 @@ print(helpers.double(21))
   <button class="btn btn-clear" onclick="clearOutput()">Clear output</button>
   <button class="btn btn-reset" onclick="resetAll()">Reset</button>
 
-  <!-- ============================================================
-       OUTPUT PANE
-       ============================================================ -->
   <h5>Output</h5>
-  <div id="output">(output will appear here)</div>
+  <div id="output-wrap">
+    <div id="output">(output will appear here)</div>
+  </div>
 
 </div>
 
@@ -236,7 +231,36 @@ print(helpers.double(21))
   });
 
   // ================================================================
-  // Set up CodeMirror on the code textarea.
+  // stdin — inline input inside the output pane
+  // ================================================================
+  let stdinResolve = null;
+
+  // Append text to output using text nodes so inline <input> elements
+  // can coexist (textContent= would remove them).
+  function signalDone() {
+    const wrap = document.getElementById('output-wrap');
+    wrap.classList.remove('done-flash');
+    void wrap.offsetWidth; // reflow to restart animation
+    wrap.classList.add('done-flash');
+    wrap.addEventListener('animationend', () => wrap.classList.remove('done-flash'), {once: true});
+    const sep = document.createElement('span');
+    sep.className = 'done-line';
+    sep.textContent = '\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500';
+    document.getElementById('output').appendChild(sep);
+  }
+
+  function appendOutput(text) {
+    const output = document.getElementById('output');
+    const last = output.lastChild;
+    if (last && last.nodeType === Node.TEXT_NODE) {
+      last.nodeValue += text;
+    } else {
+      output.appendChild(document.createTextNode(text));
+    }
+  }
+
+  // ================================================================
+  // Set up CodeMirror on the main code textarea
   // ================================================================
   const editor = CodeMirror.fromTextArea(document.getElementById("code"), {
     mode: "python",
@@ -248,6 +272,70 @@ print(helpers.double(21))
       "Tab": function(cm) { cm.replaceSelection("    "); }
     }
   });
+
+  // ================================================================
+  // Patch Skulpt's open() to support write ('w') and append ('a') mode.
+  // Writes go back to the textarea with id matching the filename,
+  // so students see the output file fill in as the program runs.
+  // ================================================================
+  (function() {
+    const _origOpen = Sk.builtins.open;
+
+    const WritableFile = Sk.misceval.buildClass(Sk.builtins, function($gbl, $loc) {
+      $loc.__init__ = new Sk.builtin.func(function(self, pyFilename, pyMode) {
+        const fn = Sk.ffi.remapToJs(pyFilename);
+        const mode = Sk.ffi.remapToJs(pyMode);
+        self._fn = fn;
+        const el = document.getElementById(fn);
+        if (!el) throw new Sk.builtin.IOError("No file pane for '" + fn + "' — add a file pane with that name.");
+        self._el = el;
+        if (mode === 'a') {
+          self._buf = filePaneEditors[fn] ? filePaneEditors[fn].getValue() : el.value;
+        } else {
+          self._buf = '';
+          if (filePaneEditors[fn]) filePaneEditors[fn].setValue('');
+          else el.value = '';
+        }
+      });
+
+      $loc.write = new Sk.builtin.func(function(self, pyS) {
+        self._buf += Sk.ffi.remapToJs(pyS);
+        if (filePaneEditors[self._fn]) filePaneEditors[self._fn].setValue(self._buf);
+        else self._el.value = self._buf;
+        return Sk.builtin.none.none$;
+      });
+
+      $loc.writelines = new Sk.builtin.func(function(self, pyLines) {
+        Sk.misceval.iterFor(Sk.abstr.iter(pyLines), function(line) {
+          self._buf += Sk.ffi.remapToJs(line);
+        });
+        if (filePaneEditors[self._fn]) filePaneEditors[self._fn].setValue(self._buf);
+        else self._el.value = self._buf;
+        return Sk.builtin.none.none$;
+      });
+
+      $loc.close = new Sk.builtin.func(function(self) {
+        return Sk.builtin.none.none$;
+      });
+
+      $loc.__enter__ = new Sk.builtin.func(function(self) { return self; });
+      $loc.__exit__ = new Sk.builtin.func(function(self, tp, val, tb) {
+        return Sk.builtin.bool.false$;
+      });
+    }, 'file', [], {});
+
+    Sk.builtins.open = new Sk.builtin.func(function(pyFilename, pyMode) {
+      const mode = pyMode !== undefined ? Sk.ffi.remapToJs(pyMode) : 'r';
+      if (mode === 'w' || mode === 'a') {
+        return Sk.misceval.callsimArray(WritableFile, [
+          pyFilename,
+          pyMode !== undefined ? pyMode : new Sk.builtin.str(mode)
+        ]);
+      }
+      return Sk.misceval.callsimArray(_origOpen,
+        pyMode !== undefined ? [pyFilename, pyMode] : [pyFilename]);
+    });
+  })();
 
   // ================================================================
   // Step debugger state
@@ -308,12 +396,46 @@ print(helpers.double(21))
     const files = {};
     document.querySelectorAll('.file-pane textarea').forEach(function(ta) {
       const filename = ta.getAttribute('data-filename');
+      if (!filename) return;
       const content = filePaneEditors[filename]
         ? filePaneEditors[filename].getValue()
         : ta.value;
       files[filename] = content.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
     });
     return files;
+  }
+
+  // ================================================================
+  // makeInputFun() — injects an inline <input> after the prompt text.
+  // Execution pauses until the user presses Enter.
+  // ================================================================
+  function makeInputFun() {
+    return function(prompt) {
+      const output = document.getElementById('output');
+      if (prompt) appendOutput(prompt);
+      const inp = document.createElement('input');
+      inp.type = 'text';
+      inp.size = 1;
+      inp.autocomplete = 'off';
+      inp.spellcheck = false;
+      inp.addEventListener('input', function() {
+        this.size = Math.max(1, this.value.length + 1);
+      });
+      inp.addEventListener('keydown', function(e) {
+        if (e.key !== 'Enter' || stdinResolve === null) return;
+        e.preventDefault();
+        const line = this.value;
+        const resolve = stdinResolve;
+        stdinResolve = null;
+        output.replaceChild(document.createTextNode(line + '\n'), inp);
+        resolve(line);
+      });
+      output.appendChild(inp);
+      inp.focus();
+      return new Promise(function(resolve) {
+        stdinResolve = resolve;
+      });
+    };
   }
 
   function makeReader(files) {
@@ -342,11 +464,13 @@ print(helpers.double(21))
     output.textContent = '';
     output.classList.remove('error');
     highlightDebugLine(null, null);
+    stdinResolve = null;
 
     const files = collectFiles();
     Sk.configure({
-      output: function(text) { output.textContent += text; },
+      output: function(text) { appendOutput(text); },
       read: makeReader(files),
+      inputfun: makeInputFun(),
       debugging: true,
       breakpoints: function() { return true; },
       execLimit: 30000
@@ -358,6 +482,7 @@ print(helpers.double(21))
     ).then(function() {
       stepResolve = null;
       highlightDebugLine(null, null);
+      signalDone();
     }).catch(function(err) {
       stepResolve = null;
       highlightDebugLine(null, null);
@@ -376,18 +501,20 @@ print(helpers.double(21))
     const output = document.getElementById("output");
     output.textContent = "";
     output.classList.remove("error");
+    stdinResolve = null;
 
     const files = collectFiles();
     Sk.configure({
-      output: function(text) { output.textContent += text; },
+      output: function(text) { appendOutput(text); },
       read: makeReader(files),
+      inputfun: makeInputFun(),
       execLimit: 10000
     });
 
     Sk.misceval.asyncToPromise(function() {
       return Sk.importMainWithBody("<stdin>", false, editor.getValue(), true);
     }).then(function() {
-      // success
+      signalDone();
     }).catch(function(err) {
       output.classList.add("error");
       output.textContent = err.toString();
@@ -415,6 +542,7 @@ print(helpers.double(21))
     clearOutput();
     stepResolve = null;
     highlightDebugLine(null, null);
+    stdinResolve = null;
   }
 </script>
 
