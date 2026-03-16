@@ -6,7 +6,7 @@ generate.py — generate a tutor exercise HTML from a markdown definition.
 
 Usage:
     python3 generate.py <exercise.md> [--out <output_dir>] [--asset-prefix <prefix>]
-    python3 generate.py <folder/>    [--out <output_dir>]  — processes all .md files in folder
+    python3 generate.py <folder/>    [--out <output_dir>] [--copy-src]  — processes all .md files in folder
 
 Default output directory: out/  (next to generate.py)
 Default asset prefix:     ../   (assets one level up from out/)
@@ -33,6 +33,7 @@ If ## Files is absent or has no file blocks, the file section is omitted.
 import sys
 import re
 import os
+import shutil
 import html as htmllib
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -45,6 +46,7 @@ def parse_args(argv):
     out_dir = DEFAULT_OUT
     asset_prefix = '../'
     md_path = None
+    copy_src = False
     i = 0
     while i < len(args):
         if args[i] == '--out':
@@ -57,10 +59,12 @@ def parse_args(argv):
             if i >= len(args):
                 sys.exit('Error: --asset-prefix requires an argument')
             asset_prefix = args[i]
+        elif args[i] == '--copy-src':
+            copy_src = True
         else:
             md_path = args[i]
         i += 1
-    return md_path, out_dir, asset_prefix
+    return md_path, out_dir, asset_prefix, copy_src
 
 
 def parse_frontmatter(text):
@@ -250,8 +254,20 @@ def generate_one(md_path, out_dir, asset_prefix):
     return True
 
 
+def copy_src_dir(out_dir):
+    src = os.path.join(SCRIPT_DIR, 'src')
+    dest = os.path.join(out_dir, 'src')
+    if not os.path.isdir(src):
+        print(f'Warning: src/ not found, skipping --copy-src', file=sys.stderr)
+        return
+    if os.path.exists(dest):
+        shutil.rmtree(dest)
+    shutil.copytree(src, dest)
+    print(f'Copied: src/ → {dest}')
+
+
 def main():
-    md_path, out_dir, asset_prefix = parse_args(sys.argv)
+    md_path, out_dir, asset_prefix, copy_src = parse_args(sys.argv)
 
     if not md_path:
         sys.exit(__doc__)
@@ -275,6 +291,9 @@ def main():
             sys.exit(1)
     else:
         sys.exit(f'Error: not found: {md_path}')
+
+    if copy_src:
+        copy_src_dir(out_dir)
 
 
 if __name__ == '__main__':

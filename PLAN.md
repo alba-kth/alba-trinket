@@ -145,11 +145,14 @@ helpers.py is running).
 
 ## Next steps / ideas
 
-- [ ] Create a sample exercise for qtype1 (samples/alba/tutor1/)
-- [ ] Add template markers to tutor1_ref.html
-- [ ] Try with a real exercise from the colleague's course (samples/riese/)
+- [ ] Write a proper deploy script that syncs files in place (instead of rmtree+copytree)
+      so AFS ACLs on public_html/src/kapitel_* are preserved across deploys.
+      Currently: after each --copy-src deploy, must re-run fs sa on each kapitel dir.
+- [ ] Download HTML button in teacher mode — needs CDN URLs for Skulpt/CodeMirror
+      so the file is self-contained without local asset paths.
 - [ ] Implement feedback.yaml checking in generate.py + runtime JS
-- [ ] Consider `input()` support — Skulpt supports it but needs a UI text box
+- [ ] Try with real exercises from the colleague's course (samples/riese/)
+- [ ] Authentication for save.php (currently open — consider KTH Kerberos .htaccess)
 
 ## Reference
 
