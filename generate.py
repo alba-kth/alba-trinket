@@ -36,7 +36,7 @@ import os
 import html as htmllib
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-TEMPLATE = os.path.join(SCRIPT_DIR, 'foerlkod_ref.html')
+TEMPLATE = os.path.join(SCRIPT_DIR, 'template.html')
 DEFAULT_OUT = os.path.join(SCRIPT_DIR, 'out')
 
 
