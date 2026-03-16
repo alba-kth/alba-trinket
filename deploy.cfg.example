@@ -1,0 +1,4 @@
+[deploy]
+ssh_host    = username@faculty-shell.sys.kth.se
+remote_path = public_html/alba-trinket
+save_token  = change-this-to-a-random-secret

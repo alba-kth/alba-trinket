@@ -232,12 +232,21 @@
     <div class="teacher-heading">⚙ Teacher mode</div>
     <div class="teacher-row">
       <div class="teacher-field">
-        <label>Folder</label>
+        <label>Load — Folder</label>
         <select id="teacher-folder" onchange="teacherLoadFiles(this.value)"></select>
       </div>
       <div class="teacher-field">
         <label>Filename</label>
         <select id="teacher-filename" onchange="teacherLoad()"></select>
+      </div>
+      <div style="width:1px;background:#ffe082;align-self:stretch;margin:0 0.25rem;"></div>
+      <div class="teacher-field">
+        <label>Save as — Folder</label>
+        <input type="text" id="teacher-save-folder" size="12" placeholder="kapitel_1">
+      </div>
+      <div class="teacher-field">
+        <label>Filename</label>
+        <input type="text" id="teacher-save-filename" size="14" placeholder="trinket6.md">
       </div>
       <button class="btn btn-teacher-save" id="teacher-save-btn" onclick="teacherSave()">&#8659; Save</button>
       <button class="btn btn-teacher-iframe" onclick="teacherGenerateIframe()">&#10697; Generate iframe</button>
@@ -648,7 +657,7 @@
   // ================================================================
   const SAVE_TOKEN = 'gnK2Qoxyc47xqYr1';
   function teacherDisableLoad(reason) {
-    ['teacher-folder', 'teacher-filename', 'teacher-save-btn'].forEach(function(id) {
+    ['teacher-folder', 'teacher-filename', 'teacher-save-folder', 'teacher-save-filename', 'teacher-save-btn'].forEach(function(id) {
       const el = document.getElementById(id);
       el.disabled = true;
       el.title = reason;
@@ -677,9 +686,9 @@
   }
 
   async function teacherSave() {
-    const folder   = document.getElementById('teacher-folder').value.trim();
-    const filename = document.getElementById('teacher-filename').value.trim();
-    if (!folder || !filename) { alert('Enter a folder and filename before saving.'); return; }
+    const folder   = document.getElementById('teacher-save-folder').value.trim();
+    const filename = document.getElementById('teacher-save-filename').value.trim();
+    if (!folder || !filename) { alert('Enter a save folder and filename before saving.'); return; }
     if (!filename.endsWith('.md')) { alert('Filename must end in .md'); return; }
 
     const content = teacherBuildMarkdown();
@@ -754,14 +763,20 @@
   }
 
   function teacherLoad() {
+    const folder   = document.getElementById('teacher-folder').value;
     const filename = document.getElementById('teacher-filename').value;
     const html = filename.replace('.md', '.html');
-    window.location.href = html + '?mode=teacher';
+    window.location.href = html + '?mode=teacher&folder=' + encodeURIComponent(folder) + '&file=' + encodeURIComponent(filename);
   }
 
   if (new URLSearchParams(window.location.search).get('mode') === 'teacher') {
     document.getElementById('teacher-bar').classList.add('visible');
     teacherLoadFolders();
+    const params = new URLSearchParams(window.location.search);
+    const preFolder = params.get('folder');
+    const preFile   = params.get('file');
+    if (preFolder) document.getElementById('teacher-save-folder').value = preFolder;
+    if (preFile)   document.getElementById('teacher-save-filename').value = preFile;
   }
 </script>
 

@@ -1,5 +1,6 @@
 out/
 dist/
+deploy.cfg
 __pycache__/
 *.pyc
 *~
