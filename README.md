@@ -147,11 +147,15 @@ For quick fixes, edit directly on the server in teacher mode — changes are liv
 
 ## Manual deploy (without deploy.py)
 
+SSH into the KTH faculty shell and run from the project directory:
+
 ```bash
+ssh username@faculty-shell.sys.kth.se
+cd ~/private/alba-trinket
 python3 generate.py src/kapitel_1/ --out ~/public_html/alba-trinket/ --asset-prefix "" --copy-src
 ```
 
-After first run or after adding a new folder, set AFS write permissions:
+After first run or after adding a new folder, set AFS write permissions (also on faculty-shell):
 ```bash
 fs sa ~/public_html/alba-trinket/src/kapitel_1 cscwwwservice rliw
 ```
