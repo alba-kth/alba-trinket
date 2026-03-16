@@ -9,8 +9,19 @@ Students edit and run Python code directly in the browser — no installation, n
 
 ## Installation
 
+**On KTH faculty-shell** — clone into `~/private` rather than your home directory,
+since your AFS home root may have `system:anyuser rl` permissions (world-readable):
+
 ```bash
+ssh username@faculty-shell.sys.kth.se
 cd ~/private
+git clone git@github.com:alba-kth/alba-trinket.git
+cd alba-trinket
+```
+
+**Locally** — clone wherever you like:
+
+```bash
 git clone git@github.com:alba-kth/alba-trinket.git
 cd alba-trinket
 ```
