@@ -170,12 +170,18 @@
     }
     #teacher-bar .teacher-row {
       display: flex;
-      align-items: center;
-      gap: 0.4rem;
+      align-items: flex-end;
+      gap: 0.75rem;
       margin-bottom: 0.4rem;
       flex-wrap: wrap;
     }
+    #teacher-bar .teacher-field {
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+    }
     #teacher-bar label { font-size: 0.85rem; color: #6c757d; }
+    #teacher-bar .teacher-row .btn { margin-bottom: 0; }
     #teacher-bar input[type="text"],
     #teacher-bar select {
       font-size: 0.875rem;
@@ -190,12 +196,6 @@
       opacity: 0.4;
       cursor: not-allowed;
     }
-    .btn-teacher-load {
-      background-color: #fff;
-      border-color: #0d6efd;
-      color: #0d6efd;
-    }
-    .btn-teacher-load:hover { background-color: #0d6efd; color: #fff; }
     .btn-teacher-save {
       background-color: #fff;
       border-color: #fd7e14;
@@ -231,11 +231,14 @@
   <div id="teacher-bar">
     <div class="teacher-heading">⚙ Teacher mode</div>
     <div class="teacher-row">
-      <label>Folder</label>
-      <select id="teacher-folder" onchange="teacherLoadFiles(this.value)"></select>
-      <label>Filename</label>
-      <select id="teacher-filename"></select>
-      <button class="btn btn-teacher-load" id="teacher-load-btn" onclick="teacherLoad()">&#8615; Load</button>
+      <div class="teacher-field">
+        <label>Folder</label>
+        <select id="teacher-folder" onchange="teacherLoadFiles(this.value)"></select>
+      </div>
+      <div class="teacher-field">
+        <label>Filename</label>
+        <select id="teacher-filename" onchange="teacherLoad()"></select>
+      </div>
       <button class="btn btn-teacher-save" id="teacher-save-btn" onclick="teacherSave()">&#8659; Save</button>
       <button class="btn btn-teacher-iframe" onclick="teacherGenerateIframe()">&#10697; Generate iframe</button>
     </div>
@@ -645,7 +648,7 @@
   // ================================================================
   const SAVE_TOKEN = 'gnK2Qoxyc47xqYr1';
   function teacherDisableLoad(reason) {
-    ['teacher-folder', 'teacher-filename', 'teacher-load-btn', 'teacher-save-btn'].forEach(function(id) {
+    ['teacher-folder', 'teacher-filename', 'teacher-save-btn'].forEach(function(id) {
       const el = document.getElementById(id);
       el.disabled = true;
       el.title = reason;
