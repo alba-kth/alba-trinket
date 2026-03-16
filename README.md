@@ -7,6 +7,16 @@ Students edit and run Python code directly in the browser — no installation, n
 
 ---
 
+## Installation
+
+```bash
+cd ~/private
+git clone git@github.com:alba-kth/alba-trinket.git
+cd alba-trinket
+```
+
+---
+
 ## What it does
 
 - Runs Python in the browser via [Skulpt](https://skulpt.org)
