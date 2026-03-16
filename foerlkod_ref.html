@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Python Tutor</title>
+  <title>alba-trinket</title>
   <!-- BEGIN:base --><base href="../"><!-- END:base -->
 
   <!-- CodeMirror: the code editor with syntax highlighting -->
@@ -137,6 +137,20 @@
       font-size: inherit;
       caret-color: #f8f9fa;
     }
+    @keyframes input-pulse {
+      0%, 100% { box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.3); }
+      50%       { box-shadow: 0 0 0 5px rgba(13, 110, 253, 0.6); }
+    }
+    #output-wrap.waiting-input { animation: input-pulse 1.2s ease-in-out infinite; }
+    .input-arrow {
+      color: #0d6efd;
+      font-style: normal;
+      animation: input-arrow-bounce 0.8s ease-in-out infinite alternate;
+    }
+    @keyframes input-arrow-bounce {
+      from { transform: translateX(0); }
+      to   { transform: translateX(4px); }
+    }
 
     /* Program-done flash and line */
     @keyframes done-flash {
@@ -245,7 +259,7 @@
     wrap.addEventListener('animationend', () => wrap.classList.remove('done-flash'), {once: true});
     const sep = document.createElement('span');
     sep.className = 'done-line';
-    sep.textContent = '\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500';
+    sep.innerHTML = '\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 <i>finished</i> \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500';
     document.getElementById('output').appendChild(sep);
   }
 
@@ -412,12 +426,14 @@
   function makeInputFun() {
     return function(prompt) {
       const output = document.getElementById('output');
+      const wrap = document.getElementById('output-wrap');
       if (prompt) appendOutput(prompt);
       const inp = document.createElement('input');
       inp.type = 'text';
       inp.size = 1;
       inp.autocomplete = 'off';
       inp.spellcheck = false;
+      wrap.classList.add('waiting-input');
       inp.addEventListener('input', function() {
         this.size = Math.max(1, this.value.length + 1);
       });
@@ -427,6 +443,7 @@
         const line = this.value;
         const resolve = stdinResolve;
         stdinResolve = null;
+        wrap.classList.remove('waiting-input');
         output.replaceChild(document.createTextNode(line + '\n'), inp);
         resolve(line);
       });
@@ -463,6 +480,7 @@
     // Start fresh debug session
     output.textContent = '';
     output.classList.remove('error');
+    document.getElementById('output-wrap').classList.remove('waiting-input');
     highlightDebugLine(null, null);
     stdinResolve = null;
 
@@ -501,6 +519,7 @@
     const output = document.getElementById("output");
     output.textContent = "";
     output.classList.remove("error");
+    document.getElementById('output-wrap').classList.remove('waiting-input');
     stdinResolve = null;
 
     const files = collectFiles();

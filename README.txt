@@ -1,4 +1,4 @@
-Python Tutor
+alba-trinket
 ============
 Browser-based Python exercise tool using Skulpt (Python in the browser).
 

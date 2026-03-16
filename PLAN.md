@@ -1,4 +1,4 @@
-# tutor — Python Tutor for Beginners
+# alba-trinket — Python Tutor for Beginners
 
 ## What it is
 
