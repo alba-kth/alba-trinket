@@ -643,6 +643,7 @@
   // ================================================================
   // Teacher mode — activate with ?mode=teacher
   // ================================================================
+  const SAVE_TOKEN = 'gnK2Qoxyc47xqYr1';
   function teacherDisableLoad(reason) {
     ['teacher-folder', 'teacher-filename', 'teacher-load-btn', 'teacher-save-btn'].forEach(function(id) {
       const el = document.getElementById(id);
@@ -687,7 +688,7 @@
       const resp = await fetch('save.php', {
         method: 'POST',
         headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-        body: new URLSearchParams({folder, filename, content})
+        body: new URLSearchParams({folder, filename, content, token: SAVE_TOKEN})
       });
       const json = await resp.json();
       if (json.ok) {

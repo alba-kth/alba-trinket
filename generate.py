@@ -260,10 +260,17 @@ def copy_src_dir(out_dir):
     if not os.path.isdir(src):
         print(f'Warning: src/ not found, skipping --copy-src', file=sys.stderr)
         return
-    if os.path.exists(dest):
-        shutil.rmtree(dest)
-    shutil.copytree(src, dest)
-    print(f'Copied: src/ → {dest}')
+    n = 0
+    for dirpath, dirnames, filenames in os.walk(src):
+        # Skip backup files
+        filenames = [f for f in filenames if not f.endswith('~')]
+        rel = os.path.relpath(dirpath, src)
+        dest_dir = os.path.join(dest, rel) if rel != '.' else dest
+        os.makedirs(dest_dir, exist_ok=True)
+        for f in filenames:
+            shutil.copy2(os.path.join(dirpath, f), os.path.join(dest_dir, f))
+            n += 1
+    print(f'Synced: src/ → {dest} ({n} files)')
 
 
 def main():
