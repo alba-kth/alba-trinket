@@ -1,4 +1,9 @@
 [deploy]
-ssh_host    = username@faculty-shell.sys.kth.se
-remote_path = public_html/alba-trinket
+# Option A — local deploy (e.g. direct AFS access):
+local_path  = ~/public_html/alba-trinket
+
+# Option B — remote deploy over SSH:
+# ssh_host    = username@faculty-shell.sys.kth.se
+# remote_path = public_html/alba-trinket
+
 save_token  = change-this-to-a-random-secret

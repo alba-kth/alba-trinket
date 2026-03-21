@@ -149,8 +149,12 @@ def build(dist):
 def main():
     cfg = load_config()
     token      = cfg['deploy']['save_token']
-    ssh_host   = cfg['deploy']['ssh_host']
-    remote     = cfg['deploy']['remote_path'].rstrip('/')
+    local_path = cfg['deploy'].get('local_path', '').strip()
+    ssh_host   = cfg['deploy'].get('ssh_host', '').strip()
+    remote     = cfg['deploy'].get('remote_path', '').strip().rstrip('/')
+
+    if not local_path and not ssh_host:
+        sys.exit('Error: deploy.cfg must set either local_path or ssh_host + remote_path.')
 
     dist = os.path.join(SCRIPT_DIR, 'dist')
     os.makedirs(dist, exist_ok=True)
@@ -167,15 +171,28 @@ def main():
         f.write(SAVE_PHP.format(token=token))
     print(f'Generated: dist/save.php')
 
-    # 4. rsync dist/ to remote
-    run(f'rsync -avz --checksum --delete {dist}/ {ssh_host}:{remote}/')
+    if local_path:
+        # 4a. Copy directly — no SSH needed (e.g. AFS mount)
+        dest = os.path.expanduser(local_path).rstrip('/')
+        os.makedirs(dest, exist_ok=True)
+        run(f'rsync -av --checksum --delete {dist}/ {dest}/')
 
-    # 5. Set AFS permissions on src subdirs
-    src_dist = os.path.join(dist, 'src')
-    if os.path.isdir(src_dist):
-        for d in sorted(os.listdir(src_dist)):
-            if os.path.isdir(os.path.join(src_dist, d)):
-                run(f'ssh {ssh_host} "fs sa {remote}/src/{d} cscwwwservice rliw"')
+        # 5a. Set AFS permissions on src subdirs locally
+        src_dist = os.path.join(dist, 'src')
+        if os.path.isdir(src_dist):
+            for d in sorted(os.listdir(src_dist)):
+                if os.path.isdir(os.path.join(src_dist, d)):
+                    run(f'fs sa {dest}/src/{d} cscwwwservice rliw')
+    else:
+        # 4b. rsync dist/ to remote over SSH
+        run(f'rsync -avz --checksum --delete {dist}/ {ssh_host}:{remote}/')
+
+        # 5b. Set AFS permissions on src subdirs via SSH
+        src_dist = os.path.join(dist, 'src')
+        if os.path.isdir(src_dist):
+            for d in sorted(os.listdir(src_dist)):
+                if os.path.isdir(os.path.join(src_dist, d)):
+                    run(f'ssh {ssh_host} "fs sa {remote}/src/{d} cscwwwservice rliw"')
 
     print('\nDeploy complete.')
 

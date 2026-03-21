@@ -145,7 +145,17 @@ The index page has a **Teacher mode** checkbox that appends `?mode=teacher` to a
 
 ## Deploying to AFS (KTH)
 
-1. Copy `deploy.cfg.example` to `deploy.cfg` and fill in your settings:
+1. Copy `deploy.cfg.example` to `deploy.cfg` and fill in your settings.
+
+   **Option A — direct AFS access** (e.g. working on faculty-shell or with AFS mounted):
+
+   ```ini
+   [deploy]
+   local_path = ~/public_html/alba-trinket
+   save_token = your-secret-token-here
+   ```
+
+   **Option B — remote deploy over SSH**:
 
    ```ini
    [deploy]
@@ -164,7 +174,7 @@ The index page has a **Teacher mode** checkbox that appends `?mode=teacher` to a
    - Update the save token in `template.html`
    - Generate all HTML into `dist/<folder>/`
    - Copy assets and generate `save.php`
-   - `rsync` everything to AFS
+   - Copy everything to `public_html` (local) or `rsync` over SSH (remote)
    - Set AFS ACLs (`fs sa`) so the web server can write to `src/`
 
 > `deploy.cfg` is git-ignored — never commit it (it contains your secret token).
