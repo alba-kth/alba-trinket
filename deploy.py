@@ -121,6 +121,10 @@ def build(dist):
     if not kapitel_dirs:
         sys.exit('No subdirectories found in src/')
     for d in kapitel_dirs:
+        src_d = os.path.join(src, d)
+        if not any(f.endswith('.md') for f in os.listdir(src_d)):
+            print(f'Skipping {d}/ — no .md files')
+            continue
         run(f'python3 generate.py src/{d}/ --out {dist}/{d}/ --asset-prefix "../"')
     # Copy src/ once at top level
     src_dir = os.path.join(SCRIPT_DIR, 'src')
