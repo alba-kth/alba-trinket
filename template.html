@@ -666,12 +666,18 @@
   function updateSaveStatus() {
     var statusEl = document.getElementById('teacher-save-status');
     if (!statusEl) return;
-    // On deployed server, Save As is hidden — don't touch the Overwrite button
-    if (!['localhost', '127.0.0.1'].includes(window.location.hostname)) return;
+    var btn = document.getElementById('teacher-save-btn');
+    // On deployed server, Save As is hidden — just enable Overwrite when dirty
+    if (!['localhost', '127.0.0.1'].includes(window.location.hostname)) {
+      btn.textContent = '\u21D9 Overwrite';
+      btn.disabled = !teacherDirty;
+      btn.style.backgroundColor = teacherDirty ? '#e67700' : '';
+      btn.style.color = teacherDirty ? '#fff' : '';
+      return;
+    }
     var folder = (document.getElementById('teacher-save-folder').value || '').trim()
                  || (document.getElementById('teacher-folder').value || '');
     var filename = (document.getElementById('teacher-save-filename').value || '').trim();
-    var btn = document.getElementById('teacher-save-btn');
 
     // Auto-append .md if missing
     if (filename && !filename.endsWith('.md')) filename += '.md';
