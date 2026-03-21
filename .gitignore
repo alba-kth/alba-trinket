@@ -1,4 +1,5 @@
 out/
+research/
 dist/
 deploy.cfg
 __pycache__/

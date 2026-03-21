@@ -82,6 +82,16 @@ class Handler(http.server.SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=SCRIPT_DIR, **kwargs)
 
+    def translate_path(self, path):
+        """Serve files from out/ at the root level, mirroring deployed layout."""
+        result = super().translate_path(path)
+        if not os.path.exists(result):
+            # Try out/ fallback — e.g. /trinket1.html → out/trinket1.html
+            out_path = super().translate_path('/out' + urllib.parse.urlparse(path).path)
+            if os.path.exists(out_path):
+                return out_path
+        return result
+
     def do_POST(self):
         if self.path in ('/save.php', '/save'):
             length = int(self.headers.get('Content-Length', 0))
@@ -98,7 +108,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 
     def log_message(self, fmt, *args):
         # Suppress asset noise, only show page loads and POSTs
-        path = args[0] if args else ''
+        path = str(args[0]) if args else ''
         if any(s in path for s in ('skulpt', 'codemirror', '.js', '.css')):
             return
         super().log_message(fmt, *args)
@@ -108,5 +118,5 @@ if __name__ == '__main__':
     port = int(sys.argv[1]) if len(sys.argv) > 1 else 8000
     print(f'alba-trinket local server — http://localhost:{port}/')
     print(f'Token: {"loaded from deploy.cfg" if SAVE_TOKEN else "not found"}')
-    print(f'Open:  http://localhost:{port}/out/trinket1.html?mode=teacher')
-    http.server.test(HandlerClass=Handler, port=port, bind='')
+    print(f'Open:  http://localhost:{port}/trinket1.html?mode=teacher')
+    http.server.test(HandlerClass=Handler, port=port, bind='0.0.0.0')
