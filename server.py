@@ -98,7 +98,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 
     def log_message(self, fmt, *args):
         # Suppress asset noise, only show page loads and POSTs
-        path = args[0] if args else ''
+        path = str(args[0]) if args else ''
         if any(s in path for s in ('skulpt', 'codemirror', '.js', '.css')):
             return
         super().log_message(fmt, *args)
@@ -109,4 +109,4 @@ if __name__ == '__main__':
     print(f'alba-trinket local server — http://localhost:{port}/')
     print(f'Token: {"loaded from deploy.cfg" if SAVE_TOKEN else "not found"}')
     print(f'Open:  http://localhost:{port}/out/trinket1.html?mode=teacher')
-    http.server.test(HandlerClass=Handler, port=port, bind='')
+    http.server.test(HandlerClass=Handler, port=port, bind='0.0.0.0')
