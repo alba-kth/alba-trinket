@@ -100,9 +100,12 @@ def update_token_in_template(token):
     path = os.path.join(SCRIPT_DIR, 'template.html')
     with open(path) as f:
         content = f.read()
+    if not re.search(r"const SAVE_TOKEN = '[^']*'", content):
+        print('Warning: SAVE_TOKEN not found in template.html — token not updated')
+        return
     updated = re.sub(r"const SAVE_TOKEN = '[^']*'", f"const SAVE_TOKEN = '{token}'", content)
     if updated == content:
-        print('Warning: SAVE_TOKEN not found in template.html — token not updated')
+        print('Token in template.html already up to date')
     else:
         with open(path, 'w') as f:
             f.write(updated)
