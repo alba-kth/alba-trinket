@@ -233,7 +233,7 @@
     <div class="teacher-row">
       <div class="teacher-field">
         <label>Load — Folder</label>
-        <select id="teacher-folder" onchange="teacherLoadFiles(this.value)"></select>
+        <select id="teacher-folder" onchange="teacherLoadFiles(this.value); updateSaveStatus()"></select>
       </div>
       <div class="teacher-field">
         <label>Filename</label>
@@ -241,16 +241,17 @@
       </div>
       <div style="width:1px;background:#ffe082;align-self:stretch;margin:0 0.25rem;"></div>
       <div class="teacher-field">
-        <label>Save as — Folder</label>
-        <input type="text" id="teacher-save-folder" size="12" placeholder="kapitel_1">
+        <label>Save as — Folder (optional)</label>
+        <input type="text" id="teacher-save-folder" size="12" placeholder="(same as Load)">
       </div>
       <div class="teacher-field">
         <label>Filename</label>
-        <input type="text" id="teacher-save-filename" size="14" placeholder="trinket6.md">
+        <input type="text" id="teacher-save-filename" size="14" placeholder="filename.md">
       </div>
-      <button class="btn btn-teacher-save" id="teacher-save-btn" onclick="teacherSave()">&#8659; Save</button>
+      <button class="btn btn-teacher-save" id="teacher-save-btn" onclick="teacherSave()" disabled>&#8659; Save</button>
       <button class="btn btn-teacher-iframe" onclick="teacherGenerateIframe()">&#10697; Generate iframe</button>
     </div>
+    <div id="teacher-save-status" style="display:none;font-size:0.8rem;padding:0.25rem 0.5rem;margin-top:-0.25rem;"></div>
   </div>
 
   <div id="teacher-iframe-panel" style="display:none;margin-bottom:1rem;">
@@ -656,6 +657,56 @@
   // Teacher mode — activate with ?mode=teacher
   // ================================================================
   const SAVE_TOKEN = 'gnK2Qoxyc47xqYr1';
+  // Track known folders and their files for save status feedback
+  const teacherKnown = { folders: {}, currentFolder: '', currentFile: '' };
+
+  function updateSaveStatus() {
+    var statusEl = document.getElementById('teacher-save-status');
+    if (!statusEl) return;
+    var folder = (document.getElementById('teacher-save-folder').value || '').trim()
+                 || (document.getElementById('teacher-folder').value || '');
+    var filename = (document.getElementById('teacher-save-filename').value || '').trim();
+    var btn = document.getElementById('teacher-save-btn');
+
+    // Auto-append .md if missing
+    if (filename && !filename.endsWith('.md')) filename += '.md';
+
+    if (!filename) {
+      statusEl.style.display = 'none';
+      btn.textContent = '\u21D9 Save';
+      btn.style.backgroundColor = '';
+      btn.style.color = '';
+      btn.disabled = true;
+      return;
+    }
+
+    btn.disabled = false;
+    statusEl.style.display = 'block';
+    var folderExists = folder in teacherKnown.folders;
+    var fileExists = folderExists && teacherKnown.folders[folder].includes(filename);
+    var path = folder + '/' + filename;
+
+    if (fileExists) {
+      statusEl.textContent = 'Will overwrite ' + path;
+      statusEl.style.color = '#e67700';
+      btn.textContent = '\u21D9 Overwrite';
+      btn.style.backgroundColor = '#e67700';
+      btn.style.color = '#fff';
+    } else if (folderExists) {
+      statusEl.textContent = 'Will create new file ' + path;
+      statusEl.style.color = '#2b8a3e';
+      btn.textContent = '\u271A Create new';
+      btn.style.backgroundColor = '#2b8a3e';
+      btn.style.color = '#fff';
+    } else {
+      statusEl.textContent = 'Will create new folder ' + folder + '/ and file ' + filename;
+      statusEl.style.color = '#2b8a3e';
+      btn.textContent = '\u271A Create new';
+      btn.style.backgroundColor = '#2b8a3e';
+      btn.style.color = '#fff';
+    }
+  }
+
   function teacherDisableLoad(reason) {
     ['teacher-folder', 'teacher-filename', 'teacher-save-folder', 'teacher-save-filename', 'teacher-save-btn'].forEach(function(id) {
       const el = document.getElementById(id);
@@ -686,10 +737,11 @@
   }
 
   async function teacherSave() {
-    const folder   = document.getElementById('teacher-save-folder').value.trim();
-    const filename = document.getElementById('teacher-save-filename').value.trim();
-    if (!folder || !filename) { alert('Enter a save folder and filename before saving.'); return; }
-    if (!filename.endsWith('.md')) { alert('Filename must end in .md'); return; }
+    const folder   = document.getElementById('teacher-save-folder').value.trim()
+                     || document.getElementById('teacher-folder').value;
+    let   filename = document.getElementById('teacher-save-filename').value.trim();
+    if (!filename) { alert('Enter a filename before saving.'); return; }
+    if (!filename.endsWith('.md')) filename += '.md';
 
     const content = teacherBuildMarkdown();
     const btn = document.getElementById('teacher-save-btn');
@@ -705,7 +757,22 @@
       const json = await resp.json();
       if (json.ok) {
         btn.textContent = '✓ Saved';
-        setTimeout(function() { btn.textContent = '↙ Save'; btn.disabled = false; }, 2000);
+        // Update Load dropdowns to reflect the saved file
+        var folderSel = document.getElementById('teacher-folder');
+        if (![...folderSel.options].some(function(o) { return o.value === folder; })) {
+          var o = document.createElement('option');
+          o.value = folder; o.textContent = folder; folderSel.appendChild(o);
+          teacherKnown.folders[folder] = [];
+        }
+        folderSel.value = folder;
+        await teacherLoadFiles(folder);
+        var fileSel = document.getElementById('teacher-filename');
+        fileSel.value = filename;
+        // Clear Save As fields
+        document.getElementById('teacher-save-folder').value = '';
+        document.getElementById('teacher-save-filename').value = '';
+        updateSaveStatus();
+        setTimeout(function() { btn.textContent = '\u21D9 Save'; }, 2000);
       } else {
         alert('Save failed: ' + json.error);
         btn.textContent = '↙ Save';
@@ -740,6 +807,7 @@
       folders.forEach(function(f) {
         const o = document.createElement('option');
         o.value = f; o.textContent = f; sel.appendChild(o);
+        teacherKnown.folders[f] = [];
       });
       await teacherLoadFiles(folders[0]);
     } catch(e) { teacherDisableLoad('(load unavailable — no src/ access)'); }
@@ -753,12 +821,14 @@
       const files = [...doc.querySelectorAll('a[href]')]
         .map(a => a.getAttribute('href'))
         .filter(h => h.endsWith('.md'));
+      teacherKnown.folders[folder] = files;
       const sel = document.getElementById('teacher-filename');
       sel.innerHTML = '';
       files.forEach(function(f) {
         const o = document.createElement('option');
         o.value = f; o.textContent = f; sel.appendChild(o);
       });
+      updateSaveStatus();
     } catch(e) { console.warn('Teacher: could not list src/' + folder, e); }
   }
 
@@ -775,8 +845,23 @@
     const params = new URLSearchParams(window.location.search);
     const preFolder = params.get('folder');
     const preFile   = params.get('file');
-    if (preFolder) document.getElementById('teacher-save-folder').value = preFolder;
-    if (preFile)   document.getElementById('teacher-save-filename').value = preFile;
+    const isLocal = ['localhost', '127.0.0.1'].includes(window.location.hostname);
+    if (isLocal) {
+      document.getElementById('teacher-save-folder').addEventListener('input', async function() {
+        var folder = this.value.trim();
+        if (folder && folder in teacherKnown.folders && teacherKnown.folders[folder].length === 0) {
+          await teacherLoadFiles(folder);
+        }
+        updateSaveStatus();
+      });
+      document.getElementById('teacher-save-filename').addEventListener('input', updateSaveStatus);
+      updateSaveStatus();
+    } else {
+      // Hide Save As on deployed server — only allow editing existing files
+      ['teacher-save-folder', 'teacher-save-filename', 'teacher-save-btn'].forEach(function(id) {
+        document.getElementById(id).style.display = 'none';
+      });
+    }
   }
 </script>
 

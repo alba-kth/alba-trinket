@@ -66,7 +66,7 @@ def handle_save(body_bytes):
         return 400, {'error': 'Folder not found or outside src/'}
 
     if not os.path.isdir(target_dir):
-        return 400, {'error': f'Folder not found: src/{folder}'}
+        os.makedirs(target_dir, exist_ok=True)
 
     target = os.path.join(target_dir, filename)
     try:
