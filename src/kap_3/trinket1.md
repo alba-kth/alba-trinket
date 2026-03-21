@@ -1,4 +1,4 @@
-# Minusgrader i Stockholm
+# Minusgrader i Stockholm kap 3
 
 ## Description
 SMHI har mätt medeltemperaturen i Stockholm (Observatorielunden) varje
@@ -21,6 +21,7 @@ def read_years(filename):
     return uppslagslista
 
 
+
 ```
 
 ### smhi_temperaturer.txt
@@ -30,6 +31,7 @@ def read_years(filename):
 1995    1.00
 1996    -6.10
 1997    0.40
+
 
 ```
 
@@ -41,6 +43,8 @@ temperaturer = filinlas.read_years('smhi_temperaturer.txt')
 for year, temp in temperaturer.items():
     if temp < 0:
         print(year)
+
+
 
 
 ```

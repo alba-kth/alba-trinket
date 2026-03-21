@@ -209,6 +209,28 @@
     }
     .btn-teacher-iframe:hover { background-color: #6f42c1; color: #fff; }
 
+    /* Editable title/description in teacher mode */
+    .teacher-editable {
+      position: relative;
+      cursor: text;
+      border: 1px dashed transparent;
+      border-radius: 4px;
+      padding: 0.15rem 0.3rem;
+      transition: border-color 0.15s;
+    }
+    .teacher-editable:hover { border-color: #adb5bd; }
+    .teacher-editable:focus  { border-color: #fd7e14; outline: none; }
+    .teacher-editable .teacher-pen {
+      position: absolute;
+      top: 0.15rem;
+      right: 0.3rem;
+      font-size: 0.75rem;
+      color: #adb5bd;
+      pointer-events: none;
+    }
+    .teacher-editable:hover .teacher-pen,
+    .teacher-editable:focus .teacher-pen { color: #fd7e14; }
+
     /* Program-done flash and line */
     @keyframes done-flash {
       0%   { box-shadow: 0 0 0 3px #198754; }
@@ -733,9 +755,17 @@
     });
   }
 
+  function teacherGetText(id) {
+    var el = document.getElementById(id);
+    var clone = el.cloneNode(true);
+    var pen = clone.querySelector('.teacher-pen');
+    if (pen) pen.remove();
+    return clone.textContent.trim();
+  }
+
   function teacherBuildMarkdown() {
-    const title = document.getElementById('exercise-title').textContent.trim();
-    const desc  = document.getElementById('exercise-description').textContent.trim();
+    const title = teacherGetText('exercise-title');
+    const desc  = teacherGetText('exercise-description');
     const code  = editor.getValue();
 
     const fileParts = [];
@@ -898,6 +928,20 @@
     document.getElementById('teacher-bar').classList.add('visible');
     teacherLoadFolders();
     const isLocal = ['localhost', '127.0.0.1'].includes(window.location.hostname);
+
+    // Make title and description editable
+    ['exercise-title', 'exercise-description'].forEach(function(id) {
+      var el = document.getElementById(id);
+      el.contentEditable = true;
+      el.classList.add('teacher-editable');
+      var pen = document.createElement('span');
+      pen.className = 'teacher-pen';
+      pen.textContent = '\u270E';
+      el.style.position = 'relative';
+      el.appendChild(pen);
+      el.addEventListener('input', teacherMarkDirty);
+    });
+
     // Track content changes for Overwrite button
     editor.on('change', teacherMarkDirty);
     Object.values(filePaneEditors).forEach(function(cm) { cm.on('change', teacherMarkDirty); });
