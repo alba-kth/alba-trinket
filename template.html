@@ -837,17 +837,29 @@
         .map(a => a.getAttribute('href').replace(/\/$/, ''))
         .filter(h => h && !h.startsWith('?') && !h.startsWith('/') && h !== '..');
       if (!folders.length) { teacherDisableLoad('(load unavailable — no src/ access)'); return; }
+      // Filter out empty folders (no .md files)
+      const nonEmpty = [];
+      for (const f of folders) {
+        try {
+          const r2 = await fetch('src/' + f + '/');
+          const h2 = await r2.text();
+          const d2 = new DOMParser().parseFromString(h2, 'text/html');
+          const mdFiles = [...d2.querySelectorAll('a[href]')]
+            .map(a => a.getAttribute('href')).filter(h => h.endsWith('.md'));
+          if (mdFiles.length) { teacherKnown.folders[f] = mdFiles; nonEmpty.push(f); }
+        } catch(e) { /* skip */ }
+      }
+      if (!nonEmpty.length) { teacherDisableLoad('(load unavailable — no src/ access)'); return; }
       const sel = document.getElementById('teacher-folder');
-      folders.forEach(function(f) {
+      nonEmpty.forEach(function(f) {
         const o = document.createElement('option');
         o.value = f; o.textContent = f; sel.appendChild(o);
-        teacherKnown.folders[f] = [];
       });
       // Pre-select folder/file from URL params
       const params = new URLSearchParams(window.location.search);
       const preFolder = params.get('folder');
       const preFile = params.get('file');
-      const activeFolder = (preFolder && folders.includes(preFolder)) ? preFolder : folders[0];
+      const activeFolder = (preFolder && nonEmpty.includes(preFolder)) ? preFolder : nonEmpty[0];
       sel.value = activeFolder;
       await teacherLoadFiles(activeFolder);
       if (preFile) {
