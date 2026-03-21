@@ -45,7 +45,12 @@ src/                  Exercise source files (markdown)
   kapitel_1/
     trinket1.md
     ...
-out/                  Generated HTML (git-ignored)
+  kap_3/
+    trinket1.md
+    ...
+out/                  Generated HTML (git-ignored), mirrors src/ folder structure
+  kapitel_1/
+  kap_3/
 dist/                 Deploy build (git-ignored)
 template.html         Single HTML template — all logic lives here
 generate.py           Converts markdown exercises to HTML
@@ -62,10 +67,11 @@ deploy.cfg.example    Config template — copy to deploy.cfg and edit
 ## Quick start (local)
 
 ```bash
+python3 generate.py src/        # generate all folders
 python3 server.py
 ```
 
-Open http://localhost:8000/out/trinket1.html
+Open http://localhost:8000/kapitel_1/trinket1.html
 
 > Opening HTML files directly (`file://`) does not work — use the server.
 
@@ -113,8 +119,9 @@ Rules:
 Generate HTML:
 
 ```bash
+python3 generate.py src/                         # all folders → out/<folder>/
+python3 generate.py src/kapitel_1/               # single folder → out/
 python3 generate.py src/kapitel_1/trinket1.md    # single file → out/
-python3 generate.py src/kapitel_1/               # whole folder → out/
 ```
 
 ---
@@ -124,7 +131,7 @@ python3 generate.py src/kapitel_1/               # whole folder → out/
 Open any exercise with `?mode=teacher`:
 
 ```
-http://localhost:8000/out/trinket1.html?mode=teacher
+http://localhost:8000/kapitel_1/trinket1.html?mode=teacher
 ```
 
 A toolbar appears at the top with:
@@ -155,7 +162,7 @@ The index page has a **Teacher mode** checkbox that appends `?mode=teacher` to a
 
    This will:
    - Update the save token in `template.html`
-   - Generate all HTML into `dist/`
+   - Generate all HTML into `dist/<folder>/`
    - Copy assets and generate `save.php`
    - `rsync` everything to AFS
    - Set AFS ACLs (`fs sa`) so the web server can write to `src/`

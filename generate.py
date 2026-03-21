@@ -288,11 +288,32 @@ def main():
             for f in os.listdir(md_path)
             if f.endswith('.md') and not f.endswith('~')
         )
-        if not md_files:
+        subdirs = sorted(
+            d for d in os.listdir(md_path)
+            if os.path.isdir(os.path.join(md_path, d))
+        )
+        if subdirs and not md_files:
+            # Parent directory with subdirectories — generate each into out/<folder>/
+            ok = True
+            for d in subdirs:
+                sub_md = sorted(
+                    os.path.join(md_path, d, f)
+                    for f in os.listdir(os.path.join(md_path, d))
+                    if f.endswith('.md') and not f.endswith('~')
+                )
+                if not sub_md:
+                    continue
+                sub_out = os.path.join(out_dir, d)
+                sub_prefix = asset_prefix if asset_prefix != '../' else '../'
+                ok = all(generate_one(p, sub_out, sub_prefix) for p in sub_md) and ok
+            if not ok:
+                sys.exit(1)
+        elif md_files:
+            ok = all(generate_one(p, out_dir, asset_prefix) for p in md_files)
+            if not ok:
+                sys.exit(1)
+        else:
             sys.exit(f'No .md files found in {md_path}')
-        ok = all(generate_one(p, out_dir, asset_prefix) for p in md_files)
-        if not ok:
-            sys.exit(1)
     elif os.path.isfile(md_path):
         if not generate_one(md_path, out_dir, asset_prefix):
             sys.exit(1)

@@ -86,7 +86,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         """Serve files from out/ at the root level, mirroring deployed layout."""
         result = super().translate_path(path)
         if not os.path.exists(result):
-            # Try out/ fallback — e.g. /trinket1.html → out/trinket1.html
+            # Try out/ fallback — e.g. /kap_3/trinket1.html → out/kap_3/trinket1.html
             out_path = super().translate_path('/out' + urllib.parse.urlparse(path).path)
             if os.path.exists(out_path):
                 return out_path
@@ -118,5 +118,5 @@ if __name__ == '__main__':
     port = int(sys.argv[1]) if len(sys.argv) > 1 else 8000
     print(f'alba-trinket local server — http://localhost:{port}/')
     print(f'Token: {"loaded from deploy.cfg" if SAVE_TOKEN else "not found"}')
-    print(f'Open:  http://localhost:{port}/trinket1.html?mode=teacher')
+    print(f'Open:  http://localhost:{port}/kapitel_1/trinket1.html?mode=teacher')
     http.server.test(HandlerClass=Handler, port=port, bind='0.0.0.0')

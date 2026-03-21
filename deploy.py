@@ -118,7 +118,14 @@ def build(dist):
     if not kapitel_dirs:
         sys.exit('No subdirectories found in src/')
     for d in kapitel_dirs:
-        run(f'python3 generate.py src/{d}/ --out {dist}/ --asset-prefix "" --copy-src')
+        run(f'python3 generate.py src/{d}/ --out {dist}/{d}/ --asset-prefix "../"')
+    # Copy src/ once at top level
+    src_dir = os.path.join(SCRIPT_DIR, 'src')
+    dest_src = os.path.join(dist, 'src')
+    if os.path.exists(dest_src):
+        shutil.rmtree(dest_src)
+    shutil.copytree(src_dir, dest_src, ignore=shutil.ignore_patterns('*~'))
+    print(f'Copied: src/')
 
     for asset in ('skulpt_files', 'codemirror_files'):
         src_asset = os.path.join(SCRIPT_DIR, asset)
@@ -158,7 +165,7 @@ def main():
     print(f'Generated: dist/save.php')
 
     # 4. rsync dist/ to remote
-    run(f'rsync -avz --checksum {dist}/ {ssh_host}:{remote}/')
+    run(f'rsync -avz --checksum --delete {dist}/ {ssh_host}:{remote}/')
 
     # 5. Set AFS permissions on src subdirs
     src_dist = os.path.join(dist, 'src')
