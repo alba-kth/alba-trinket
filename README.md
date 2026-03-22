@@ -79,7 +79,16 @@ Open http://localhost:8000/kapitel_1/trinket1.html
 
 ## Writing exercises
 
-Exercises are markdown files in `src/`. See [writing-exercises.md](writing-exercises.md) for the full format reference with annotated screenshots.
+Exercises are markdown files in `src/`. Each file follows this structure:
+
+```
+# Title
+## Description
+## Files          (optional)
+## Main Code
+```
+
+See [writing-exercises.md](writing-exercises.md) for the full format reference with annotated screenshots.
 
 Generate HTML:
 
