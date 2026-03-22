@@ -48,7 +48,7 @@ src/                  Exercise source files (markdown)
   kap_3/
     trinket1.md
     ...
-out/                  Generated HTML (git-ignored), mirrors src/ folder structure
+out/                  Generated HTML (git-ignored), mirrors src/
   kapitel_1/
   kap_3/
 dist/                 Deploy build (git-ignored)
@@ -79,49 +79,14 @@ Open http://localhost:8000/kapitel_1/trinket1.html
 
 ## Writing exercises
 
-Exercises are markdown files in `src/`. Example:
-
-```markdown
----
-type: qtype1
----
-# Title of the exercise
-
-## Description
-Explain what the student should do. Use `backticks` for code.
-
-## Files
-### data.txt
-```
-line one
-line two
-```
-
-#### helpers.py
-```python
-def greet(name):
-    return f"Hello, {name}!"
-```
-
-## Main Code
-```python
-with open("data.txt") as f:
-    for line in f:
-        print(line.strip())
-```
-```
-
-Rules:
-- `###` filename — full-width file pane
-- `####` filename — side-by-side with adjacent `####` panes
-- `.py` files get syntax highlighting automatically
+Exercises are markdown files in `src/`. See [writing-exercises.md](writing-exercises.md) for the full format reference with annotated screenshots.
 
 Generate HTML:
 
 ```bash
-python3 generate.py src/                         # all folders → out/<folder>/
-python3 generate.py src/kapitel_1/               # single folder → out/
-python3 generate.py src/kapitel_1/trinket1.md    # single file → out/
+python3 generate.py src/                         # all folders → out/<folder>/*.html
+python3 generate.py src/kapitel_1/               # one folder  → out/*.html (flat)
+python3 generate.py src/kapitel_1/trinket1.md    # one file    → out/trinket1.html
 ```
 
 ---
@@ -136,6 +101,7 @@ http://localhost:8000/kapitel_1/trinket1.html?mode=teacher
 
 A toolbar appears at the top with:
 - **Load** — folder/filename dropdowns populated from `src/` (navigates on change)
+- **Title & Description** — editable inline; changes are saved back to the markdown
 - **Save As** — text inputs for folder and filename, writes back to `src/`
 - **Generate iframe** — shows embed code for Canvas/LMS
 
